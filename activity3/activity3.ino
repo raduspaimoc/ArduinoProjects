@@ -16,6 +16,7 @@
 byte _buff[6];
 
 const int DEVICE_ADDRESS = (0x53);  
+#define SLAVE_ADDR 0x30
 
 char POWER_CTL = 0x2D;
 char DATA_FORMAT = 0x31;
@@ -31,12 +32,59 @@ const int DHTPin = 5;     // what digital pin we're connected to
 DHT dht(DHTPin, DHTTYPE);
 const int EchoPin = 8;
 const int TriggerPin = 9;
+
+char ch;
+struct accel
+{
+  float x;
+  float y;
+  float z;
+};
+
+int distance;
+float humidity;
+float temperature;
+
+accel d;
+
+
+void sendFunc()
+{
+  Serial.println(ch);
+  switch(ch)
+  {
+      case 't':
+        Wire.write((byte*)&temperature, sizeof(float));
+        break;
+      case 'd':
+        distance = ping(TriggerPin, EchoPin);
+        Wire.write((byte*)&distance, sizeof(int));
+        break;
+      case 'h':
+        Wire.write((byte*)&humidity, sizeof(float));
+        break;
+      case 'a':
+        Wire.write((byte*)&d, sizeof(accel));
+       break;
+       default:
+        return;
+    }
+}
+
+void receiveFUNC(){
+  while(Wire.available())
+    ch = (char)Wire.read();
+}
+
  
 void setup() {
    Serial.begin(9600);
    pinMode(TriggerPin, OUTPUT);
    pinMode(EchoPin, INPUT);
-   Serial.println("DHTxx test!");
+   
+   Wire.begin(SLAVE_ADDR);
+   Wire.onReceive(receiveFUNC);
+   Wire.onRequest(sendFunc);
    dht.begin();
 
    Wire.begin();
@@ -44,30 +92,27 @@ void setup() {
    writeTo(DEVICE_ADDRESS, POWER_CTL, 0x08);  //Poner el ADXL345 
 }
  
-void loop() {
-   // Wait a few seconds between measurements.
-   delay(1000);
-   int cm = ping(TriggerPin, EchoPin);
-   Serial.print("Distancia: ");
-   Serial.println(cm);
-   delay(2000);
-   // Reading temperature or humidity takes about 250 milliseconds!
-   float h = dht.readHumidity();
-   float t = dht.readTemperature();
-   readAccel(); //Leer aceleracion x, y, z
-   delay(500);
+void loop() 
+{
+  float x, y, z;
+  readAccel(x, y, z);
 
-   if (isnan(h) || isnan(t)) {
-      Serial.println("Failed to read from DHT sensor!");
-      return;
-   }
- 
-   Serial.print("Humidity: ");
-   Serial.print(h);
-   Serial.print(" %\t");
-   Serial.print("Temperature: ");
-   Serial.print(t);
-   Serial.println(" *C ");
+  Serial.println(d.x);
+  Serial.println(d.y);
+  Serial.println(d.z);
+  d.x = x;
+  d.y = y;
+  d.z = z;
+
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+  
+  if (isnan(humidity ) || isnan(temperature)) 
+  {
+    Serial.println("Failed to read from DHT sensor!");
+    return;
+  }
+  delay(500);
 }
  
 int ping(int TriggerPin, int EchoPin) {
@@ -85,21 +130,18 @@ int ping(int TriggerPin, int EchoPin) {
    return distanceCm;
 }
 
-void readAccel() {
+void readAccel(float &x, float &y, float &z) {
   //Leer los datos
+  
   uint8_t numBytesToRead = 6;
   readFrom(DEVICE_ADDRESS, DATAX0, numBytesToRead, _buff);
 
   //Leer los valores del registro y convertir a int (Cada eje tiene 10 bits, en 2 Bytes LSB)
-  int x = (((int)_buff[1]) << 8) | _buff[0];   
-  int y = (((int)_buff[3]) << 8) | _buff[2];
-  int z = (((int)_buff[5]) << 8) | _buff[4];
-  Serial.print("x: ");
-  Serial.print( x );
-  Serial.print(" y: ");
-  Serial.print( y );
-  Serial.print(" z: ");
-  Serial.println( z );
+  x = (((int)_buff[1]) << 8) | _buff[0];   
+  y = (((int)_buff[3]) << 8) | _buff[2];
+  z = (((int)_buff[5]) << 8) | _buff[4];
+
+  //Wire.write((byte*)&d, sizeof(data));
 }
 
 
