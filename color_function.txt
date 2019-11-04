@@ -1,0 +1,7 @@
+LIB 		KEYWORD1
+circle  	KEYWORD2
+rectangle 	KEYWORD2
+line        KEYWORD2
+print       KEYWORD2
+sPixel      KEYWORD2
+clPixel     KEYWORD2
