@@ -55,15 +55,16 @@ void loop() {
                   Serial.println(t);                  
                   aux = "Request: " + String(inputChar) + " - Receiving: " + String(t);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(50, 10, string);                 
+                  serialLib.print(10, 50, string);                 
                   break;
         case 'd':
                   int distance;
                   Wire.requestFrom(SLAVE_ADDR, sizeof(int));
                   Wire.readBytes((byte* )&distance, sizeof(int));
+                  Serial.println(distance);
                   aux = "Request: " + String(inputChar) + " - Receiving: " + String(distance);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(50, 10, string);                  
+                  serialLib.print(10, 50, string);                  
                   break;
         case 'h':
                   float humidity;
@@ -72,7 +73,7 @@ void loop() {
                   Serial.println(humidity);
                   aux = "Request: " + String(inputChar) + " - Receiving: " + String(humidity);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(50, 10, string);                  
+                  serialLib.print(10, 50, string);                  
                   break;
         case 'a': 
                   Wire.requestFrom(SLAVE_ADDR, sizeof(data));
@@ -82,10 +83,10 @@ void loop() {
                   Serial.println(data.z);
                   String aux = "Request: " + String(inputChar) + " - Receiving: ";
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(50, 10, string);
-                   aux = "X: " + String(data.x) + "Y: " + String(data.y) + "Z: " + String(data.z);
+                  serialLib.print(10, 50, string);
+                   aux = "X: " + String(data.x) + " Y: " + String(data.y) + " Z: " + String(data.z);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(70, 10, string);                  
+                  serialLib.print(0, 30, string);                  
                   break;
         default:
                 return;
