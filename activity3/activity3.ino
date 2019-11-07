@@ -13,19 +13,8 @@
 // Connect pin 4 (on the right) of the sensor to GROUND
 // Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
 
-byte _buff[6];
-
-const int DEVICE_ADDRESS = (0x53);  
 #define SLAVE_ADDR 0x30
 
-char POWER_CTL = 0x2D;
-char DATA_FORMAT = 0x31;
-char DATAX0 = 0x32;  //X-Axis Data 0
-char DATAX1 = 0x33; //X-Axis Data 1
-char DATAY0 = 0x34; //Y-Axis Data 0
-char DATAY1 = 0x35; //Y-Axis Data 1
-char DATAZ0 = 0x36; //Z-Axis Data 0
-char DATAZ1 = 0x37; //Z-Axis Data 1
  
 const int DHTPin = 5;     // what digital pin we're connected to
  
@@ -34,18 +23,11 @@ const int EchoPin = 8;
 const int TriggerPin = 9;
 
 char ch;
-struct accel
-{
-  float x;
-  float y;
-  float z;
-};
 
 int distance;
 float humidity;
 float temperature;
 
-accel d;
 
 
 void sendFunc()
@@ -62,10 +44,7 @@ void sendFunc()
         break;
       case 'h':
         Wire.write((byte*)&humidity, sizeof(float));
-        break;
-      case 'a':
-        Wire.write((byte*)&d, sizeof(accel));
-       break;
+        break;     
        default:
         return;
     }
@@ -87,23 +66,12 @@ void setup() {
    Wire.onRequest(sendFunc);
    dht.begin();
 
-   Wire.begin();
-   writeTo(DEVICE_ADDRESS, DATA_FORMAT, 0x01); //Poner ADXL345 en +- 4G
-   writeTo(DEVICE_ADDRESS, POWER_CTL, 0x08);  //Poner el ADXL345 
+   Wire.begin();   
 }
  
 void loop() 
-{
-  float x, y, z;
-  readAccel(x, y, z);
-
-  Serial.println(d.x);
-  Serial.println(d.y);
-  Serial.println(d.z);
-  d.x = x;
-  d.y = y;
-  d.z = z;
-
+{  
+  
   humidity = dht.readHumidity();
   temperature = dht.readTemperature();
   
@@ -128,45 +96,4 @@ int ping(int TriggerPin, int EchoPin) {
    
    distanceCm = duration * 10 / 292/ 2;   //convertimos a distancia, en cm
    return distanceCm;
-}
-
-void readAccel(float &x, float &y, float &z) {
-  //Leer los datos
-  
-  uint8_t numBytesToRead = 6;
-  readFrom(DEVICE_ADDRESS, DATAX0, numBytesToRead, _buff);
-
-  //Leer los valores del registro y convertir a int (Cada eje tiene 10 bits, en 2 Bytes LSB)
-  x = (((int)_buff[1]) << 8) | _buff[0];   
-  y = (((int)_buff[3]) << 8) | _buff[2];
-  z = (((int)_buff[5]) << 8) | _buff[4];
-
-  //Wire.write((byte*)&d, sizeof(data));
-}
-
-
-void writeTo(int device, byte address, byte val) 
-{
-  Wire.beginTransmission(device);
-  Wire.write(address);
-  Wire.write(val);
-  Wire.endTransmission();
-}
-
-void readFrom(int device, byte address, int num, byte buff[])
-{
-  Wire.beginTransmission(device);
-  Wire.write(address);
-  Wire.endTransmission();
-
-  Wire.beginTransmission(device);
-  Wire.requestFrom(device, num);
-
-  int i = 0;
-  while(Wire.available())
-  {
-    buff[i++] = Wire.read();  
-  }
-  
-  Wire.endTransmission();
 }
