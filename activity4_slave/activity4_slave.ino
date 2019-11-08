@@ -73,23 +73,7 @@ void loop()
   while(!xbee.available());
   
   ch = (char)xbee.read();
-  sendFunc();
-  /*Serial.println(ch);
-  switch(ch)
-  {
-      case 't':        
-        xbee.print(temperature);
-        break;
-      case 'd': 
-        Serial.println(distance);            
-        xbee.print(distance);
-        break;
-      case 'h':
-        xbee.print(humidity);
-        break;     
-       default:
-        return;
-    }  */ 
+  sendFunc(); 
 }
  
 int ping(int TriggerPin, int EchoPin) {
