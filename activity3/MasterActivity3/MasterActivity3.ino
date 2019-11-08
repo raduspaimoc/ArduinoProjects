@@ -3,11 +3,13 @@
  */
 #include "DHT.h"
 #include "Wire.h"
-#include "MyLibrary.h"
+//#include "MyLibrary.h"
+#include "SoftwareSerial.h"
 #define SLAVE_ADDR 0x30
 
-SoftwareSerial sf(8, 9); //rx rt
-MyLib serialLib =  MyLib(sf);
+// SoftwareSerial sf(8, 9); //rx rt
+// MyLib serialLib =  MyLib();
+SoftwareSerial xbee(2,3);
 
 const int DEVICE_ADDRESS = (0x53);  
 byte _buff[6];
@@ -36,7 +38,8 @@ data data;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(9600); 
+  Serial.begin(115200); 
+  xbee.begin(9600);
    Wire.begin();
    writeTo(DEVICE_ADDRESS, DATA_FORMAT, 0x01); //Poner ADXL345 en +- 4G
    writeTo(DEVICE_ADDRESS, POWER_CTL, 0x08);  //Poner el ADXL345  
@@ -46,35 +49,55 @@ void loop() {
 
     float x, y, z;
     readAccel(x, y, z);
+  
     data.x = x;
     data.y = y;
     data.z = z;
 
-    delay(500);
+
+
+
+
+  xbee.print('d');
+
+  //aux = "Distance: " + atoi(xbee.read());
+  //String(aux).toCharArray(string, 256);
+
+  Serial.write((unsigned char)0x7C);
+  Serial.write((unsigned char)0x00);
+  
+  Serial.write((unsigned char)(0x7C));
+  Serial.write((unsigned char)(0x18));
+  Serial.write((unsigned char)(10));
+
+  Serial.write((unsigned char)(0x7C));
+  Serial.write((unsigned char)(0x19));
+  Serial.write((unsigned char)(50));
+  Serial.write((char*)"Distance: ");
+
+  while(!xbee.available());
+
+  while(xbee.available())
+  {
+    char asd = xbee.read();
+    Serial.write(asd); 
+  }
+
+
+  delay(5000);
   // put your main code here, to run repeatedly:
   while(Serial.available()){   //Wait for something
     inputChar = Serial.read();
 
-    if(inputChar == 't' || inputChar == 'd' || inputChar == 'h'|| inputChar == 'a'){
-      
-      Serial.print("Request: ");
-      Serial.print(inputChar);
-      Serial.print(" - Receiving: ");
-      serialLib.clearScreen();            
-
-      Wire.beginTransmission(SLAVE_ADDR);
-      Wire.write(inputChar);
-      Wire.endTransmission();
+    if(inputChar == 't' || inputChar == 'd' || inputChar == 'h'){
 
       switch(inputChar){
         case 't':
-                  float t;
-                  Wire.requestFrom(SLAVE_ADDR, sizeof(float));
-                  Wire.readBytes((byte* )&t, sizeof(float));
-                  Serial.println(t);                  
-                  aux = "Request: " + String(inputChar) + " - Receiving: " + String(t);
+                  xbee.print('t');
+                  while(!xbee.available());
+                  aux = "Request: t - Receiving: " + String(xbee.readString());
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(10, 50, string);                 
+                  //serialLib.print(10, 50, string);                 
                   break;
         case 'd':
                   int distance;
@@ -83,7 +106,7 @@ void loop() {
                   Serial.println(distance);
                   aux = "Request: " + String(inputChar) + " - Receiving: " + String(distance);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(10, 50, string);                  
+                  //serialLib.print(10, 50, string);                  
                   break;
         case 'h':
                   float humidity;
@@ -92,18 +115,7 @@ void loop() {
                   Serial.println(humidity);
                   aux = "Request: " + String(inputChar) + " - Receiving: " + String(humidity);
                   String(aux).toCharArray(string, 256);
-                  serialLib.print(10, 50, string);                  
-                  break;
-        case 'a': 
-                  Serial.println(data.x);
-                  Serial.println(data.y);
-                  Serial.println(data.z);
-                  String aux = "Request: " + String(inputChar) + " - Receiving: ";
-                  String(aux).toCharArray(string, 256);
-                  serialLib.print(10, 50, string);
-                   aux = "X: " + String(data.x) + " Y: " + String(data.y) + " Z: " + String(data.z);
-                  String(aux).toCharArray(string, 256);
-                  serialLib.print(0, 30, string);                  
+                  //serialLib.print(10, 50, string);                  
                   break;
         default:
                 return;
@@ -124,8 +136,14 @@ void readAccel(float &x, float &y, float &z) {
   x = (((int)_buff[1]) << 8) | _buff[0];   
   y = (((int)_buff[3]) << 8) | _buff[2];
   z = (((int)_buff[5]) << 8) | _buff[4];
-
-  //Wire.write((byte*)&d, sizeof(data));
+/*
+serialLib.clearScreen();  
+  aux = "";
+   String(aux).toCharArray(string, 256);
+    serialLib.print(10, 50, string);
+     aux = "X: " + String(x) + " Y: " + String(y) + " Z: " + String(z);
+    String(aux).toCharArray(string, 256);
+    serialLib.print(0, 30, string);      */
 }
 
 void writeTo(int device, byte address, byte val) 
