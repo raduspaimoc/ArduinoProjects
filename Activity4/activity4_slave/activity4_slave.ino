@@ -4,10 +4,6 @@
  
 // Uncomment whatever type you're using!
 #define DHTTYPE DHT11   // DHT 11
-//#define DHTTYPE DHT22   // DHT 22  (AM2302), AM2321
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
-
-#define SLAVE_ADDR 0x30
 
 SoftwareSerial xbee(2,3);
 const int DHTPin = 5;     // what digital pin we're connected to
@@ -69,9 +65,10 @@ void loop()
     return;
   } 
   distance = ping(TriggerPin, EchoPin); 
-  
+
+  Serial.println("Xbee");
   while(!xbee.available());
-  
+  Serial.println("Xbee out");
   ch = (char)xbee.read();
   sendFunc(); 
 }

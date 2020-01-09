@@ -5,7 +5,6 @@
 #include "Wire.h"
 //#include "MyLibrary.h"
 #include "SoftwareSerial.h"
-#define SLAVE_ADDR 0x30
 
 // SoftwareSerial sf(8, 9); //rx rt
 // MyLib serialLib =  MyLib();
@@ -38,7 +37,7 @@ data data;
 
 void setup() {
   // put your setup code here, to run once:
-  Serial.begin(115200); 
+  Serial.begin(9600); 
   xbee.begin(9600);
    Wire.begin();
    writeTo(DEVICE_ADDRESS, DATA_FORMAT, 0x01); //Poner ADXL345 en +- 4G
@@ -46,46 +45,22 @@ void setup() {
 }
 
 void loop() {
-
-    float x, y, z;
-    readAccel(x, y, z);
-    int posX, posY;
-
-    data.x = x;
-    data.y = y;
-    data.z = z;
-
-  //aux = "Distance: " + atoi(xbee.read());
-  //String(aux).toCharArray(string, 256);
-  Serial.write((unsigned char)0x7C);
-  Serial.write((unsigned char)0x00);
-
-  printToScreen(10,60);
+  
   Serial.write((char*)"Distance: ");
   xbee.print('d'); 
   receiveDataSlave();
   
-  printToScreen(10,50);
+  
   Serial.write((char*) "Temperature: ");
   xbee.print('t');
   receiveDataSlave();
   
-  printToScreen(10,40);
+  
   Serial.write((char*) "Humidity: ");
   xbee.print('h');
   receiveDataSlave();
 
-  printToScreen(10, 30);
   Serial.write((char*) "Accelerometer:");
-  printToScreen(10, 20);
-  Serial.print("x: ");
-  Serial.print(x);
-  Serial.print(" y: ");
-  Serial.print(y);
-  printToScreen(10, 10);
-  Serial.print("z: ");
-  Serial.print(z);
-
   delay(5000);
 
 }
